@@ -1,19 +1,32 @@
 #include <Wire.h>
 #include <MPU6050_light.h>
+#include <Ultrasonic.h>
+#include <L298NX2.h>
 MPU6050 mpu(Wire);
-const byte R1 = 3;
-const byte R2 = 5;
-const byte L1 = 6;
-const byte L2 = 9;
-const byte trig = 11;
-const byte echo = 2;
+Ultrasonic distance(11, 2, 40000UL);
+L298NX2 motors(3, 5, 6, 9);
 
 void setup()
 {
+  Serial.begin(9600);
   Wire.begin();
+  Wire.setClock(400000);
+  byte beginMpu = mpu.begin();
+  if (beginMpu != 0)
+  {
+    Serial.println("Deu merda no MPU ja");
+    while(beginMpu != 0);
+  }
+  Serial.println("Começou funcionando");
+  mpu.calcOffsets();
+  motors.setSpeed(200);
+  motors.forward();
 }
 
 void loop()
 {
-
+  mpu.update();
+  float Z = mpu.getAngleZ();
+  D = distance.read();
+  Serial.println("Distance:" D);
 }
