@@ -5,8 +5,10 @@
 MPU6050 mpu(Wire);
 Ultrasonic distance(11, 2, 40000UL);
 L298NX2 motors(3, 5, 6, 9);
-float correct = 0;
-float correctInv = 0;
+float correctbrut = 0;
+float correctInvbrut = 0;
+int correct = 0;
+int correctInv = 0;
 unsigned long time = 0;
 unsigned long timeN = 0;
 const int interval = 500;
@@ -51,18 +53,18 @@ void loop()
   if (Z > 0)
   {
     correct = (150 + Z);
-    correct = (int)correct;
+    correct = (int)correctbrut;
     correctInv = (150 - Z);
-    correctInv = (int)correctInv;
+    correctInv = (int)correctInvbrut;
     motors.setSpeedA(correctInv);
     motors.setSpeedB(correct);
   }
   else if (Z < 0)
   {
     correct = (150 + (Z * -1));
-    correct = (int)correct;
+    correct = (int)correctbrut;
     correctInv = (150 - (Z * -1));
-    correctInv = (int)correctInv;
+    correctInv = (int)correctInvbrut;
     motors.setSpeedA(correct);
     motors.setSpeedB(correctInv);
   }
