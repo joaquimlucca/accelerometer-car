@@ -5,6 +5,11 @@
 MPU6050 mpu(Wire);
 Ultrasonic distance(11, 2, 40000UL);
 L298NX2 motors(3, 5, 6, 9);
+float correct = 0;
+float correctInv = 0;
+unsigned long time = 0;
+unsigned long timeN = 0;
+const int interval = 500;
 
 void setup()
 {
@@ -19,14 +24,46 @@ void setup()
   }
   Serial.println("Começou funcionando");
   mpu.calcOffsets();
-  motors.setSpeed(200);
+  motors.setSpeed(0);
   motors.forward();
+  time = millis();
 }
 
 void loop()
 {
+  timeN = millis();
   mpu.update();
   float Z = mpu.getAngleZ();
-  D = distance.read();
-  Serial.println("Distance:" D);
+  Z = fmod(Z, 90.0);
+  float D = distance.read();
+  if (timeN - time >= interval)
+  {
+    Serial.print("Distance: ");
+    Serial.println(D);
+    Serial.print("Angle Z: ");
+    Serial.println(Z);
+    Serial.print("Correction1:" );
+    Serial.println(correct);
+    Serial.print("Correction2:" );
+    Serial.println(correctInv);
+    time = timeN;
+  }
+  if (Z > 0)
+  {
+    correct = (150 + Z);
+    correct = (int)correct;
+    correctInv = (150 - Z);
+    correctInv = (int)correctInv;
+    motors.setSpeedA(correctInv);
+    motors.setSpeedB(correct);
+  }
+  else if (Z < 0)
+  {
+    correct = (150 + (Z * -1));
+    correct = (int)correct;
+    correctInv = (150 - (Z * -1));
+    correctInv = (int)correctInv;
+    motors.setSpeedA(correct);
+    motors.setSpeedB(correctInv);
+  }
 }
