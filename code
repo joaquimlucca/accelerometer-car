@@ -52,18 +52,18 @@ void loop()
   }
   if (Z > 0)
   {
-    correct = (150 + Z);
+    correctbrut = (150 + Z);
     correct = (int)correctbrut;
-    correctInv = (150 - Z);
+    correctInvbrut = (150 - Z);
     correctInv = (int)correctInvbrut;
     motors.setSpeedA(correctInv);
     motors.setSpeedB(correct);
   }
   else if (Z < 0)
   {
-    correct = (150 + (Z * -1));
+    correctbrut = (150 + (Z * -1));
     correct = (int)correctbrut;
-    correctInv = (150 - (Z * -1));
+    correctInvbrut = (150 - (Z * -1));
     correctInv = (int)correctInvbrut;
     motors.setSpeedA(correct);
     motors.setSpeedB(correctInv);
