@@ -1,0 +1,120 @@
+#include <Wire.h>
+#include <MPU6050_light.h>
+MPU6050 mpu(Wire);
+const byte R1 = 3;
+const byte R2 = 5;
+const byte L1 = 6;
+const byte L2 = 9;
+const byte trig = 11;
+const byte echo = 2;
+unsigned long time = 0;
+unsigned long duration = 0;
+unsigned long time1 = 0;
+unsigned long time2 = 0;
+int R = 0;
+int L = 0;
+float Kp = 3.0;
+int V = 200;
+float D = 0.0;
+int distance = 0;
+bool obstacle;
+
+void setup()
+{
+  Serial.begin(9600);
+  Wire.begin();
+  pinMode(R1, OUTPUT);
+  pinMode(R2, OUTPUT);
+  pinMode(L1, OUTPUT);
+  pinMode(L2, OUTPUT);
+  pinMode(trig, OUTPUT);
+  pinMode(echo, INPUT);
+  digitalWrite(trig, LOW);
+  Serial.println("Inicializando MPU-6050...");
+  mpu.begin();
+  delay(1000);
+  Serial.println("Calibrando... Mantenha o robô totalmente parado.");
+  mpu.calcOffsets();
+  Serial.println("Pronto!");
+}
+
+void loop()
+{
+  mpu.update();
+  float Z = mpu.getAngleZ();
+  time1 = millis();
+  if ((time1 - time2) >= 60)
+  {
+    digitalWrite(trig, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(trig, LOW);
+    time2 = millis();
+    duration = pulseIn(echo, HIGH, 25000);
+  }
+  if (duration >= 25000)
+  {
+    distance = 400;
+  }
+  else
+  {
+    distance = duration * 0.0343 / 2;
+  }
+  if (distance <= 30)
+  {
+    analogWrite(L1, 0);
+    analogWrite(L2, 0);
+    analogWrite(R1, 0);
+    analogWrite(R2, 0);
+    obstacle = true;
+  }
+  float error = D - Z;
+  float correction = error * Kp;
+  R = V + correction;
+  L = V - correction;
+  L = constrain(L, 0, 255);
+  R = constrain(R, 0, 255);
+  if (obstacle)
+  {
+    analogWrite(L1, 0);
+    analogWrite(L2, V);
+    analogWrite(R1, 0);
+    analogWrite(R2, V);
+    delay(2000);
+    obstacle = false;
+  }
+  if ((millis() - time) > 500)
+  {
+    Serial.print("Alvo: ");
+    Serial.println(D);
+    Serial.print(" | Atual: ");
+    Serial.println(Z);
+    Serial.print(" | Erro: ");
+    Serial.println(error);
+    Serial.print(" | Mot_Esq: ");
+    Serial.println(L);
+    Serial.print(" | Mot_Dir: ");
+    Serial.println(R);
+    Serial.print(" | Ultrassom: ");
+    Serial.println(distance);
+    time = millis();
+  }
+  if (distance > 30 && obstacle == false)
+  {
+    if (L >= 0) {
+      analogWrite(L1, L);
+      analogWrite(L2, 0);  
+    }
+    else {
+      analogWrite(L1, 0);
+      analogWrite(L2, abs(L));
+    }
+    if (R >= 0) {
+      analogWrite(R1, R);
+      analogWrite(R2, 0);
+    }
+    else {
+      analogWrite(R1, 0);
+      analogWrite(R2, abs(R));
+    }
+  }
+}
