@@ -12,17 +12,18 @@ int correctInv = 0;
 unsigned long time = 0;
 unsigned long timeN = 0;
 const int interval = 500;
+int speedA = 150;
+int speedB = 150;
 
-void setup()
-{
+void setup() {
   Serial.begin(9600);
   Wire.begin();
   Wire.setClock(400000);
   byte beginMpu = mpu.begin();
-  if (beginMpu != 0)
-  {
+  if (beginMpu != 0) {
     Serial.println("Deu merda no MPU ja");
-    while(beginMpu != 0);
+    while (beginMpu != 0)
+      ;
   }
   Serial.println("Começou funcionando");
   mpu.calcOffsets();
@@ -31,41 +32,39 @@ void setup()
   time = millis();
 }
 
-void loop()
-{
+void loop() {
   timeN = millis();
   mpu.update();
   float Z = mpu.getAngleZ();
-  Z = fmod(Z, 90.0);
+  Z = constrain(Z, -90, 90);
   float D = distance.read();
-  if (timeN - time >= interval)
-  {
-    Serial.print("Distance: ");
-    Serial.println(D);
-    Serial.print("Angle Z: ");
-    Serial.println(Z);
-    Serial.print("Correction1:" );
-    Serial.println(correct);
-    Serial.print("Correction2:" );
-    Serial.println(correctInv);
-    time = timeN;
-  }
-  if (Z > 0)
-  {
+  if (Z > 0) {
     correctbrut = (150 + Z);
     correct = (int)correctbrut;
     correctInvbrut = (150 - Z);
     correctInv = (int)correctInvbrut;
-    motors.setSpeedA(correctInv);
-    motors.setSpeedB(correct);
-  }
-  else if (Z < 0)
-  {
+    speedA = correctInv;
+    speedB = correct;
+  } else if (Z < 0) {
     correctbrut = (150 + (Z * -1));
     correct = (int)correctbrut;
     correctInvbrut = (150 - (Z * -1));
     correctInv = (int)correctInvbrut;
-    motors.setSpeedA(correct);
-    motors.setSpeedB(correctInv);
+    speedA = correct;
+    speedB = correctInv;
+  }
+  speedA = speedA - 30;
+  motors.setSpeedA(speedA);
+  motors.setSpeedB(speedB);
+  if (timeN - time >= interval) {
+    Serial.print("Distance: ");
+    Serial.println(D);
+    Serial.print("Angle Z: ");
+    Serial.println(Z);
+    Serial.print("Speed A:");
+    Serial.println(speedA);
+    Serial.print("Speed B:");
+    Serial.println(speedB);
+    time = timeN;
   }
 }
