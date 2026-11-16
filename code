@@ -18,7 +18,8 @@ int speedB = 120;
 void setup() {
   Serial.begin(9600);
   Wire.begin();
-  Wire.setClock(400000);
+  Wire.setClock(100000);
+  Wire.setWireTimeout(25000, true);
   byte beginMpu = mpu.begin();
   if (beginMpu != 0) {
     Serial.println("Deu merda no MPU ja");
@@ -44,20 +45,19 @@ void loop() {
     correct = (int)correctbrut;
     correctInvbrut = (120 - Z);
     correctInv = (int)correctInvbrut;
-    speedA = correctInv;
+    speedA = correctInv - 15;
     speedB = correct;
   } else if (Z < 0) {
     correctbrut = (120 + (Z * -1));
     correct = (int)correctbrut;
     correctInvbrut = (120 - (Z * -1));
     correctInv = (int)correctInvbrut;
-    speedA = correct;
+    speedA = correct - 15;
     speedB = correctInv;
   } else {
     speedA = 120;
     speedB = 120;
   }
-  
   motors.setSpeedA(speedA);
   motors.setSpeedB(speedB);
   motors.forward();
