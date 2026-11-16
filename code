@@ -12,8 +12,8 @@ int correctInv = 0;
 unsigned long time = 0;
 unsigned long timeN = 0;
 const int interval = 500;
-int speedA = 150;
-int speedB = 150;
+int speedA = 120;
+int speedB = 120;
 
 void setup() {
   Serial.begin(9600);
@@ -36,29 +36,34 @@ void loop() {
   timeN = millis();
   mpu.update();
   float Z = mpu.getAngleZ();
-  Z = constrain(Z, -90, 90);
-  float D = distance.read();
+  // Limite reduzido de 90 para 35 para não passar de 155 de PWM e estourar os 300mA
+  Z = constrain(Z, -35, 35);
+  //float D = distance.read();
   if (Z > 0) {
-    correctbrut = (150 + Z);
+    correctbrut = (120 + Z);
     correct = (int)correctbrut;
-    correctInvbrut = (150 - Z);
+    correctInvbrut = (120 - Z);
     correctInv = (int)correctInvbrut;
     speedA = correctInv;
     speedB = correct;
   } else if (Z < 0) {
-    correctbrut = (150 + (Z * -1));
+    correctbrut = (120 + (Z * -1));
     correct = (int)correctbrut;
-    correctInvbrut = (150 - (Z * -1));
+    correctInvbrut = (120 - (Z * -1));
     correctInv = (int)correctInvbrut;
     speedA = correct;
     speedB = correctInv;
+  } else {
+    speedA = 120;
+    speedB = 120;
   }
-  speedA = speedA - 30;
+  
   motors.setSpeedA(speedA);
   motors.setSpeedB(speedB);
+  motors.forward();
   if (timeN - time >= interval) {
-    Serial.print("Distance: ");
-    Serial.println(D);
+//    Serial.print("Distance: ");
+//    Serial.println(D);
     Serial.print("Angle Z: ");
     Serial.println(Z);
     Serial.print("Speed A:");
